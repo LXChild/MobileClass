@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title> 移动课堂 </title>
+
+    <link th:href="@{/css/bootstrap/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/css/fileinput/fileinput.css}" rel="stylesheet"/>
+    <link th:href="@{/fonts/font-awesome.css}" rel="stylesheet"/>
+    <link th:href="@{/css/mobileclass/course-detail.css}" rel="stylesheet"/>
+</head>
+<body>
+<!-- Fixed navbar -->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#"> 移动课堂 </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a th:href="@{/index}"> 主页 </a></li>
+                <li class="active"><a th:href="@{/courses}"> 课程 </a></li>
+                <li><a th:href="@{/papers}"> 试题 </a></li>
+                <li><a th:href="@{/posts}"> 论坛 </a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                       aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-user"
+                              th:text="${#httpServletRequest.getRemoteUser()}"> 我的 </span>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a th:href="@{/users/profile}"> 个人资料 </a></li>
+                        <li><a th:href="@{/courses/mine}"> 课程相关 </a></li>
+                        <li sec:authorize="hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_ADMIN')">
+                            <a th:href="@{/users}"> 用户管理 </a>
+                        </li>
+                        <li sec:authorize="hasRole('ROLE_SYS_ADMIN')">
+                            <a th:href="@{/roles}"> 角色管理 </a>
+                        </li>
+                        <li><a th:href="@{/aboutus}"> 关于我们 </a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a th:href="@{/logout}"> 注销 </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+<div class="container content">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 th:text="${courseDO.course.name}">课程名称</h4>
+            <a th:if="${not subscription}" class="btn btn-sm btn-info" role="button" onclick="subscription()">
+                收藏
+            </a>
+            <a th:if="${subscription}" class="btn btn-sm btn-info" role="button"
+               th:href="@{'/courseSubscription/remove'(courseId=${courseDO.course.id})}">
+                已收藏
+            </a>
+            <a class="btn btn-sm btn-info" role="button" th:href="@{'/papers/course/' + ${courseDO.course.id}}">
+                课程试卷
+            </a>
+            <a th:if="${isCreator}" class="btn btn-sm btn-info" role="button"
+               th:href="@{/courseSubscription(courseId=${courseDO.course.id})}">
+                课程小组
+            </a>
+        </div>
+        <div class="panel-body">
+            <ul class="list-unstyled top_profiles">
+                <li class="media event">
+                    <div class="media-body padding-13">
+                        <input id="courseIdSub" class="form-control" th:value="${courseDO.course.id}" type="hidden"/>
+                        <p>
+                            <label>课程简介: </label>
+                            <small th:text="${courseDO.course.introduction}"></small>
+                        </p>
+                        <p>
+                            <label>老师名称: </label>
+                            <small th:text="${courseDO.course.teacherName}">老师姓名</small>
+                        </p>
+                        <p>
+                            <label>创建时间: </label>
+                            <small th:text="${#calendars.format(courseDO.course.createTime,'yyyy-MM-dd HH:mm:ss')}"> 创建时间</small>
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4>课件下载</h4>
+        </div>
+        <div class="panel-body">
+            <p th:if="${courseDO.coursewares.size() lt 1}">暂无可下载课件</p>
+            <ul class="list-unstyled top_profiles" th:each="courseware : ${courseDO.coursewares}">
+                <li class="media event">
+                    <a class="pull-left border-aero profile_thumb">
+                        <i class="fa fa-user aero"></i>
+                    </a>
+                    <div class="media-body">
+                        <a class="title" th:href="@{'/files/download/'(fileName=${courseware.name})}"
+                           th:text="${courseware.name}">
+                            文件名称
+                        </a>
+                        <p>
+                            <small th:text="${#calendars.format(courseware.createTime,'yyyy-MM-dd HH:mm:ss')}"> 创建时间</small>
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div sec:authorize="hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_ADMIN', 'ROLE_TEACHER')" th:if="${isCreator}"
+         class="panel panel-default">
+        <div class="panel-heading">
+            <h4> 上传课件 </h4>
+        </div>
+        <div class="panel-body">
+            <form th:action="@{/coursewares}" method="post" enctype="multipart/form-data">
+                <input id="courseId" name="courseId" class="form-control" th:value="${courseDO.course.id}"
+                       type="hidden"
+                       required="required"/>
+                <input id="file" name="file" class="file" type="file" data-max-file-count="1"/>
+                <button class="btn btn-sm btn-primary btn-block margin-top-13" type="submit"> 上传</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <hr/>
+    <footer>
+        <p class="pull-right"><a href="#"> 返回顶部 </a></p>
+        <p>&copy; 2017 Powered By Chong</p>
+    </footer>
+</div>
+</body>
+<script th:src="@{/js/jquery/jquery-3.2.0.js}"></script>
+<script th:src="@{/js/bootstrap/bootstrap.js}"></script>
+<script th:src="@{/js/fileinput/fileinput.js}"></script>
+<script th:src="@{/js/fileinput/zh.js}"></script>
+<script th:src="@{/js/mobileclass/courseware-detail.js}"></script>
+</html>

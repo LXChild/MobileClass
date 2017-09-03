@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta name="description" content="mobile class"/>
+    <meta name="author" content="chong"/>
+
+    <title> 移动课堂 </title>
+
+    <link th:href="@{/css/bootstrap/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/fonts/font-awesome.css}" rel="stylesheet"/>
+    <link th:href="@{/css/mobileclass/login.css}" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+    <form class="form-signin" th:action="@{/login}" method="post">
+        <div class="form-signin-heading alert alert-danger" th:if="${param.error}">
+            <p>用户名或密码错误</p>
+        </div>
+        <div class="form-signin-heading alert alert-success" th:if="${param.logout}">
+            <p>您已成功注销</p>
+        </div>
+        <h2 class="form-signin-heading"> 用户登录 </h2>
+        <table class="table-signin">
+            <tr>
+                <td colspan="2">
+                    <div class="input-group  input-sm">
+                        <label class="input-group-addon" for="username"><i class="fa fa-user"></i></label>
+                        <input id="username" name="username" type="text" class="form-control"
+                               placeholder="用户名" required="required"/>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="input-group input-sm">
+                        <label class="input-group-addon" for="password"><i class="fa fa-lock"></i></label>
+                        <input id="password" name="password" type="password" class="form-control"
+                               placeholder="密码" required="required"/>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button class="btn btn-primary margin-top-13 form-control" type="submit"> 登录</button>
+                </td>
+                <td>
+                    <button class="btn btn-info margin-top-13 form-control" data-toggle="modal" data-target="#register-model">
+                        注册
+                    </button>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <div id="register-model" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="register"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title">注册</h4>
+                </div>
+                <div class="modal-body">
+                    <label for="name-register-model" class="margin-top-13">用户名
+                        <span class="required">*</span>
+                    </label>
+                    <input id="name-register-model" name="name" class="form-control"
+                           type="text" placeholder="请输入用户名" required="required"/>
+                    <label for="password-register-model" class="margin-top-13">密码
+                        <span class="required">*</span>
+                    </label>
+                    <input id="password-register-model" name="password" class="form-control"
+                           type="password" placeholder="请输入密码" required="required"/>
+                    <label for="password-duplicate-register-model" class="margin-top-13">重复密码
+                        <span class="required">*</span>
+                    </label>
+                    <input id="password-duplicate-register-model" name="password" class="form-control"
+                           type="password" placeholder="请重复输入密码" required="required"/>
+                    <label for="mobile-register-model" class="margin-top-13">手机号
+                        <span class="required">*</span>
+                    </label>
+                    <input id="mobile-register-model" name="mobile" class="form-control" type="tel"
+                           placeholder="请输入手机号"/>
+                    <label for="email-register-model" class="margin-top-13">邮箱
+                        <span class="required">*</span>
+                    </label>
+                    <input id="email-register-model" name="email" class="form-control" type="email"
+                           placeholder="请输入邮箱"/>
+                    <label for="real-name-register-model" class="margin-top-13">真实姓名（注册后无法更改）
+                        <span class="required">*</span>
+                    </label>
+                    <input id="real-name-register-model" name="realName" class="form-control"
+                           placeholder="请输入真实姓名"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        关闭
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="userRegister()">
+                        注册
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+</div>
+</body>
+<script th:src="@{/js/jquery/jquery-3.2.0.js}"></script>
+<script th:src="@{/js/bootstrap/bootstrap.js}"></script>
+<script th:src="@{/js/mobileclass/login.js}"></script>
+</html>

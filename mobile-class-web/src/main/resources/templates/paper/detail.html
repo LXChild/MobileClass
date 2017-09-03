@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title> 移动课堂 </title>
+
+    <link th:href="@{/css/bootstrap/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/css/mobileclass/paper-detail.css}" rel="stylesheet"/>
+    <link th:href="@{/fonts/font-awesome.css}" rel="stylesheet"/>
+</head>
+<body>
+<!-- Fixed navbar -->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#"> 移动课堂 </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a th:href="@{/index}"> 主页 </a></li>
+                <li><a th:href="@{/courses}"> 课程 </a></li>
+                <li class="active"><a th:href="@{/papers}"> 试题 </a></li>
+                <li><a th:href="@{/posts}"> 论坛 </a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                       aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-user"
+                              th:text="${#httpServletRequest.getRemoteUser()}"> 我的 </span>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a th:href="@{/users/profile}"> 个人资料 </a></li>
+                        <li><a th:href="@{/courses/mine}"> 课程相关 </a></li>
+                        <li sec:authorize="hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_ADMIN')">
+                            <a th:href="@{/users}"> 用户管理 </a>
+                        </li>
+                        <li sec:authorize="hasRole('ROLE_SYS_ADMIN')">
+                            <a th:href="@{/roles}"> 角色管理 </a>
+                        </li>
+                        <li><a th:href="@{/aboutus}"> 关于我们 </a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a th:href="@{/logout}"> 注销 </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+<div class="container content">
+    <div id="paper" class="panel panel-default">
+        <div class="panel-heading">
+            <h4 th:text="${paperVO.paper.name}"> 试卷名 </h4>
+        </div>
+        <div class="panel-body">
+            <ul class="list-unstyled top_profiles">
+                <li class="media event">
+                    <div class="media-body">
+                        <div>
+                            <span th:text="${paperVO.paper.remark}"> 备注 </span> &nbsp;
+                            <span th:if="${showAnswer and haveDone}" class="pull-right">
+                                <label for="score"> 得分: </label>
+                                <small id="score" th:text="${score ?: '暂无成绩'}"></small>
+                            </span>
+                            <span th:if="${not showAnswer and not haveDone}" class="pull-right">
+                                <label for="countDown"> 倒计时: </label>
+                                <small id="countDown" th:text="${score ?: '00:00:00'}"></small>
+                            </span>
+                        </div>
+                        <div>
+                            <label for="quizTime"> 考试时间: </label>
+                            <small id="quizTime"
+                                   th:text="${#calendars.format(paperVO.paper.quizTime,'yyyy-MM-dd HH:mm:ss')}"> 考试时间
+                            </small> &nbsp;&nbsp;
+                            <label for="totalScore"> 试卷总分: </label>
+                            <small id="totalScore" th:text="${totalScore}"> 考试时间</small> &nbsp;&nbsp;
+                            <label for="quizDuration"> 考试时长: </label>
+                            <small id="quizDuration" th:text="${paperVO.paper.quizDuration}"> 考试时长</small>
+                            <small>&nbsp;分钟</small>
+
+                            <a th:if="${isCreator}" class="btn btn-sm btn-info no-print" th:onclick="'javascript:showPaper(\''+
+                            ${paperVO.paper.id}+'\',\''+${showPaper}+'\')'" th:text="${showPaper}?'隐藏试卷':'公开试卷'">试卷</a>
+                            <a th:if="${isCreator}" class="btn btn-sm btn-info no-print" th:onclick="'javascript:showAnswer(\''+
+                            ${paperVO.paper.id}+'\',\''+${showAnswer}+'\')'"
+                               th:text="${showAnswer}?'隐藏答案':'公布答案'">答案</a>
+                            <a th:if="${isCreator}" class="btn btn-sm btn-success no-print"
+                               th:href="@{'/scores'(paperId = ${paperVO.paper.id})}">查看成绩</a>
+                            <a th:if="${isCreator}" class="btn btn-sm btn-success no-print" onclick="printPaper()">
+                                打印试卷
+                            </a>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <hr/>
+            <h4> 一、单选题 </h4>
+            <p th:if="${paperVO.singleSelDOs.size() lt 1}">尚未创建该题</p>
+            <ul class="list-unstyled top_profiles" th:each="singleSelDO : ${paperVO.singleSelDOs}">
+                <li class="media">
+                    <div class="media-body body-question-margin">
+                        <div th:object="${singleSelDO.singleSel}">
+                            <h5 th:text="${singleSelDOStat.count} + '、' + *{question} + '&nbsp;&nbsp;(' + *{score}+ '分)'">
+                                问题 </h5>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-list-alt no-print"
+                               data-toggle="popover" title="查看该题答案详情"
+                               th:href="@{/answers/singleSel(paperId=*{paperId}, questionId=*{id})}"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-edit no-print"
+                               data-toggle="modal" data-target="#single-sel-model"
+                               th:onclick="'javascript:editSingleSel(\''+*{id}+'\',\''+*{question}+'\',\''+*{answerA}+
+                               '\',\''+*{answerB}+'\',\''+*{answerC}+'\',\''+*{answerD}+'\',\''+*{answerR}+
+                               '\',\''+*{score}+'\')'"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-trash no-print"
+                               data-toggle="popover" title="删除该题"
+                               th:onclick="'javascript:deleteSingleSel(\''+*{id}+'\')'"></a>
+                            <div th:id="${'single-sel-radio-group' + singleSelDOStat.count}" class="radio-group">
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" th:name="*{'singleSel' + id}"
+                                               th:text="*{answerA}" value="A"/>
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" th:name="*{'singleSel' + id}"
+                                               th:text="*{answerB}" value="B"/>
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" th:name="*{'singleSel' + id}"
+                                               th:text="*{answerC}" value="C"/>
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" th:name="*{'singleSel' + id}"
+                                               th:text="*{answerD}" value="D"/>
+                                    </label>
+                                </div>
+                            </div>
+                            <p class="post-margin">
+                                <span th:if="${showAnswer and haveDone}">
+                                    <label> 正确答案： </label>
+                                    <small th:text="*{answerR}"> 正确答案</small> &nbsp;&nbsp;
+                                        <label> 你的答案： </label>
+                                        <small th:text="${singleSelDO.answerInfo} == null ? '空(错误)' :
+                                         ${singleSelDO.answerInfo.answer}"> 你的答案</small> &nbsp;
+                                </span>
+                            </p>
+                            <input th:id="${'single-sel-btn' + singleSelDOStat.count}" type="hidden"
+                                   th:onclick="'javascript:submitSingleSel(\''+*{id}+'\',\''+*{paperId}+'\',\''+
+                                   ${singleSelDOStat.count}+'\')'"/>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <hr/>
+            <h4> 二、多选题 </h4>
+            <p th:if="${paperVO.multiSelDOs.size() lt 1}">尚未创建该题</p>
+            <ul class="list-unstyled top_profiles" th:each="multiSelDO : ${paperVO.multiSelDOs}">
+                <li class="media event">
+                    <div class="media-body body-question-margin">
+                        <div th:object="${multiSelDO.multiSel}">
+                            <h5 th:text="${multiSelDOStat.count} + '、' + *{question} + '&nbsp;&nbsp;(' + *{score}+ '分)'">
+                                问题 </h5>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-list-alt no-print"
+                               data-toggle="popover" title="查看该题答案详情"
+                               th:href="@{/answers/multiSel(paperId=*{paperId}, questionId=*{id})}"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-edit no-print"
+                               data-toggle="modal" data-target="#multi-sel-model"
+                               th:onclick="'javascript:editMultiSel(\''+*{id}+'\',\''+*{question}+
+                           '\',\''+*{answerA}+'\',\''+*{answerB}+'\',\''+*{answerC}+
+                           '\',\''+*{answerD}+'\',\''+*{answerE}+'\',\''+*{answerF}+
+                           '\',\''+*{answerR}+'\',\''+*{score}+'\')'"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-trash no-print"
+                               data-toggle="popover" title="删除该题"
+                               th:onclick="'javascript:deleteMultiSel(\''+*{id}+'\')'"></a>
+                            <div th:id="${'multi-sel-checkbox-group' + multiSelDOStat.count}" class="checkbox-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" th:name="*{'multiSel' + id}"
+                                               th:text="*{answerA}" value="A"/>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" th:name="*{'multiSel' + id}"
+                                               th:text="*{answerB}" value="B"/>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" th:name="*{'multiSel' + id}"
+                                               th:text="*{answerC}" value="C"/>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" th:name="*{'multiSel' + id}"
+                                               th:text="*{answerD}" value="D"/>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" th:name="*{'multiSel' + id}"
+                                               th:text="*{answerE}" value="E"/>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" th:name="*{'multiSel' + id}"
+                                               th:text="*{answerF}" value="F"/>
+                                    </label>
+                                </div>
+                            </div>
+                            <p class="post-margin">
+                                <span th:if="${showAnswer and haveDone}">
+                                    <label> 正确答案： </label>
+                                    <small th:text="*{answerR}"> 正确答案</small> &nbsp;&nbsp;
+                                        <label> 你的答案： </label>
+                                        <small th:text="${multiSelDO.answerInfo} == null ? '空(错误)' :
+                                         ${multiSelDO.answerInfo.answer}"> 你的答案</small> &nbsp;
+                                </span>
+                            </p>
+                            <input th:id="${'multi-sel-btn' + multiSelDOStat.count}" type="hidden"
+                                   th:onclick="'javascript:submitMultiSel(\''+*{id}+'\',\''+
+                               *{paperId}+'\',\''+${multiSelDOStat.count}+'\')'"/>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <hr/>
+            <h4> 三、对错题 </h4>
+            <p th:if="${paperVO.rightWrongDOs.size() lt 1}">尚未创建该题</p>
+            <ul class="list-unstyled top_profiles" th:each="rightWrongDO : ${paperVO.rightWrongDOs}">
+                <li class="media event">
+                    <div class="media-body body-question-margin">
+                        <div th:object="${rightWrongDO.rightWrong}">
+                            <h5 th:text="${rightWrongDOStat.count} + '、' + *{question} + '&nbsp;&nbsp;(' + *{score}+ '分)'">
+                                问题 </h5>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-list-alt no-print"
+                               data-toggle="popover" title="查看该题答案详情"
+                               th:href="@{/answers/rightWrong(paperId=*{paperId}, questionId=*{id})}"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-edit no-print"
+                               data-toggle="modal" data-target="#right-wrong-model"
+                               th:onclick="'javascript:editRightWrong(\''+*{id}+'\',\''+
+                           *{question}+'\',\''+*{answer}+'\',\''+*{score}+'\')'"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-trash no-print"
+                               data-toggle="popover" title="删除该题"
+                               th:onclick="'javascript:deleteRightWrong(\''+*{id}+'\')'"></a>
+                            <div th:id="${'right-wrong-radio-group' + rightWrongDOStat.count}" class="radio-group">
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" th:name="*{'rightWrong' + id}"
+                                               value="true"/> 正确
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" th:name="*{'rightWrong' + id}"
+                                               value="false"/> 错误
+                                    </label>
+                                </div>
+                            </div>
+                            <p class="post-margin">
+                                <span th:if="${showAnswer and haveDone}">
+                                    <label> 正确答案： </label>
+                                    <small th:if="*{answer}"> 正确</small>
+                                    <small th:if="not *{answer}"> 错误</small> &nbsp;&nbsp;
+                                        <label> 你的答案： </label>
+                                        <small th:text="${rightWrongDO.answerInfo} == null ? '空(错误)' :
+                                         (${rightWrongDO.answerInfo.answer} ? '正确' : '错误')"> 你的答案</small> &nbsp;
+                                </span>
+                            </p>
+                            <input th:id="${'right-wrong-btn' + rightWrongDOStat.count}" type="hidden"
+                                   th:onclick="'javascript:submitRightWrong(\''+*{id}+'\',\''+
+                               *{paperId}+'\',\''+${rightWrongDOStat.count}+'\')'"/>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <hr/>
+            <h4> 四、填空题 </h4>
+            <p th:if="${paperVO.fillingBlankDOs.size() lt 1}">尚未创建该题</p>
+            <ul class="list-unstyled top_profiles" th:each="fillingBlankDO : ${paperVO.fillingBlankDOs}">
+                <li class="media event">
+                    <div class="media-body body-question-margin">
+                        <div th:object="${fillingBlankDO.fillingBlank}">
+                            <h5 th:text="${fillingBlankDOStat.count} + '、' + *{question} + '&nbsp;&nbsp;(' + *{score}+ '分)'">
+                                问题 </h5>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-list-alt no-print"
+                               data-toggle="popover" title="查看该题答案详情"
+                               th:href="@{/answers/fillingBlank(paperId=*{paperId}, questionId=*{id})}"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-edit no-print"
+                               data-toggle="modal" data-target="#filling-blank-model"
+                               th:onclick="'javascript:editFillingBlank(\''+*{id}+'\',\''+
+                           *{question}+'\',\''+*{answer}+'\',\''+*{score}+'\')'"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-trash no-print"
+                               data-toggle="popover" title="删除该题"
+                               th:onclick="'javascript:deleteFillingBlank(\''+*{id}+'\')'"></a>
+                            <input th:id="${'filling-blank-answer' + fillingBlankDOStat.count}" name="answer"
+                                   class="form-control post-margin" type="text" placeholder="请输入答案"
+                                   required="required"/>
+                            <p class="post-margin">
+                                <span th:if="${showAnswer and haveDone}">
+                                    <label> 正确答案： </label>
+                                    <small th:text="*{answer}"> 正确答案</small> &nbsp;&nbsp;
+                                        <label> 你的答案： </label>
+                                        <small th:text="${fillingBlankDO.answerInfo} == null ? '空(错误)' :
+                                         ${fillingBlankDO.answerInfo.answer}"> 你的答案</small> &nbsp;
+                                </span>
+                            </p>
+                            <input th:id="${'filling-blank-btn' + fillingBlankDOStat.count}" type="hidden"
+                                   th:onclick="'javascript:submitFillingBlank(\''+*{id}+'\',\''+
+                               *{paperId}+'\',\''+${fillingBlankDOStat.count}+'\')'"/>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <hr/>
+            <h4> 五、简答题 </h4>
+            <p th:if="${paperVO.essayDOs.size() lt 1}">尚未创建该题</p>
+            <ul class="list-unstyled top_profiles" th:each="essayDO : ${paperVO.essayDOs}">
+                <li class="media event">
+                    <div class="media-body body-question-margin">
+                        <div th:object="${essayDO.essay}">
+                            <h5 th:text="${essayDOStat.count} + '、' + *{question} + '&nbsp;&nbsp;(' + *{score}+ '分)'">
+                                问题 </h5>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-list-alt no-print"
+                               data-toggle="popover" title="查看该题答案详情"
+                               th:href="@{/answers/essay(paperId=*{paperId}, questionId=*{id})}"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-edit no-print"
+                               data-toggle="modal" data-target="#essay-model"
+                               th:onclick="'javascript:editEssay(\''+*{id}+'\',\''+
+                           *{question}+'\',\''+*{answer}+'\',\''+*{score}+'\')'"></a>
+                            <span th:if="${isCreator}">&nbsp;</span>
+                            <a th:if="${isCreator}" class="glyphicon glyphicon-trash no-print"
+                               data-toggle="popover" title="删除该题"
+                               th:onclick="'javascript:deleteEssay(\''+*{id}+'\')'"></a>
+                            <textarea th:id="${'essay-answer' + essayDOStat.count}" name="answer" type="text"
+                                      class="form-control post-margin" placeholder="请输入答案(255字以内)" required="required"/>
+                            <div class="post-margin" th:if="${showAnswer and haveDone}">
+                                <label> 正确答案： </label>
+                                <small th:text="*{answer}"> 正确答案</small> &nbsp;&nbsp;
+                                <p>
+                                    <label> 你的答案： </label>
+                                    <small th:text="${essayDO.answerInfo} == null ? '空(错误)' :
+                                               ${essayDO.answerInfo.answer}"> 你的答案
+                                    </small> &nbsp;
+                                </p>
+                            </div>
+                            <input th:id="${'essay-btn' + essayDOStat.count}" type="hidden"
+                                   th:onclick="'javascript:submitEssay(\''+*{id}+'\',\''+
+                               *{paperId}+'\',\''+${essayDOStat.count}+'\')'"/>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <hr/>
+            <button th:if="${showPaper and not haveDone}" class="btn btn-sm btn-primary form-control"
+                    data-toggle="modal" data-target="#alert-modal"> 交卷
+            </button>
+        </div>
+    </div>
+
+    <div sec:authorize="hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_ADMIN', 'ROLE_TEACHER')" th:if="${isCreator}"
+         class="panel panel-default">
+        <div class="panel-heading">
+            <h4> 添加试题 </h4>
+        </div>
+        <div class="panel-body">
+            <label for="question-type"> 请选择题型: </label>
+            <select id="question-type" class="form-control" readonly="readonly">
+                <option value="0"> 单选题</option>
+                <option value="1"> 多选题</option>
+                <option value="2"> 对错题</option>
+                <option value="3"> 填空题</option>
+                <option value="4"> 简答题</option>
+            </select>
+            <button id="btn-add-question" class="btn btn-sm btn-primary btn-block post-margin" data-toggle="modal"
+                    onclick="addQuestion()"> 添加
+            </button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="single-sel-model" tabindex="-1" role="dialog" aria-labelledby="single-sel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 id="title-single-sel-model" class="modal-title">
+                        添加单选题
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <form id="form-single-sel-model" th:action="@{/singleSels}" method="post">
+                        <input name="paperId" class="form-control" th:value="${paperVO.paper.id}" type="hidden"
+                               required="required"/>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 问题 </span>
+                            <input id="question-single-sel-model" name="question" class="form-control" type="text"
+                                   placeholder="请输入题目" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 A </span>
+                            <input id="answer-a-single-sel-model" name="answerA" class="form-control" type="text"
+                                   placeholder="请输入选项 A" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 B </span>
+                            <input id="answer-b-single-sel-model" name="answerB" class="form-control" type="text"
+                                   placeholder="请输入选项 B" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 C </span>
+                            <input id="answer-c-single-sel-model" name="answerC" class="form-control" type="text"
+                                   placeholder="请输入选项 C" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 D </span>
+                            <input id="answer-d-single-sel-model" name="answerD" class="form-control" type="text"
+                                   placeholder="请输入选项 D" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 分值 </span>
+                            <input id="score-single-sel-model" name="score" class="form-control" type="number"
+                                   placeholder="请输入此题分值" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 正确选项 </span>
+                            <!--<input name="answerR" class="form-control" type="text" placeholder="请输入正确选项"-->
+                            <!--required="required"/>-->
+                            <select id="answer-r-single-sel-model" name="answerR" class="form-control"
+                                    readonly="readonly">
+                                <option value="A"> A</option>
+                                <option value="B"> B</option>
+                                <option value="C"> C</option>
+                                <option value="D"> D</option>
+                            </select>
+                        </div>
+                        <button id="btn-single-sel-model" class="btn btn-sm btn-primary btn-block post-margin"
+                                type="submit"> 添加
+                        </button>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <div class="modal fade" id="multi-sel-model" tabindex="-1" role="dialog" aria-labelledby="multi-sel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 id="title-multi-sel-model" class="modal-title">
+                        添加多选题
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <form id="form-multi-sel-model" th:action="@{/multiSels}" method="post">
+                        <input name="paperId" th:value="${paperVO.paper.id}" type="hidden" required="required"/>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 问题 </span>
+                            <input id="question-multi-sel-model" name="question" class="form-control"
+                                   type="text" placeholder="请输入题目" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 A </span>
+                            <input id="answer-a-multi-sel-model" name="answerA" class="form-control"
+                                   type="text" placeholder="请输入选项 A" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 B </span>
+                            <input id="answer-b-multi-sel-model" name="answerB" class="form-control"
+                                   type="text" placeholder="请输入选项 B" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 C </span>
+                            <input id="answer-c-multi-sel-model" name="answerC" class="form-control"
+                                   type="text" placeholder="请输入选项 C" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 D </span>
+                            <input id="answer-d-multi-sel-model" name="answerD" class="form-control"
+                                   type="text" placeholder="请输入选项 D" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 E </span>
+                            <input id="answer-e-multi-sel-model" name="answerE" class="form-control"
+                                   type="text" placeholder="请输入选项 E" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 选项 F </span>
+                            <input id="answer-f-multi-sel-model" name="answerF" class="form-control"
+                                   type="text" placeholder="请输入选项 F" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 正确选项 </span>
+                            <input id="answer-r-multi-sel-model" name="answerR" class="form-control"
+                                   type="text" placeholder="请输入正确答案" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 分值 </span>
+                            <input id="score-multi-sel-model" name="score" class="form-control" type="number"
+                                   placeholder="请输入此题分值" required="required"/>
+                        </div>
+                        <button id="btn-multi-sel-model" class="btn btn-sm btn-primary btn-block post-margin"
+                                type="submit"> 添加
+                        </button>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <div class="modal fade" id="right-wrong-model" tabindex="-1" role="dialog" aria-labelledby="right-wrong"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 id="title-right-wrong-model" class="modal-title">
+                        添加对错题
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <form id="form-right-wrong-model" th:action="@{/rightWrongs}" method="post">
+                        <input name="paperId" th:value="${paperVO.paper.id}" type="hidden" required="required"/>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 问题 </span>
+                            <input id="question-right-wrong-model" name="question" class="form-control"
+                                   type="text" placeholder="请输入题目" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 正确答案 </span>
+                            <select id="answer-right-wrong-model" name="answer" class="form-control"
+                                    readonly="readonly">
+                                <option value="true"> 正确</option>
+                                <option value="false"> 错误</option>
+                            </select>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 分值 </span>
+                            <input id="score-right-wrong-model" name="score" class="form-control"
+                                   type="number" placeholder="请输入此题分值" required="required"/>
+                        </div>
+                        <button id="btn-right-wrong-model" class="btn btn-sm btn-primary btn-block post-margin"
+                                type="submit"> 添加
+                        </button>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <div class="modal fade" id="filling-blank-model" tabindex="-1" role="dialog" aria-labelledby="filling-blank"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 id="title-filling-blank-model" class="modal-title">
+                        添加填空题
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <form id="form-filling-blank-model" th:action="@{/fillingBlanks}" method="post">
+                        <input name="paperId" th:value="${paperVO.paper.id}" type="hidden" required="required"/>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 问题 </span>
+                            <input id="question-filling-blank-model" name="question" class="form-control"
+                                   type="text" placeholder="请输入题目" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 正确答案 </span>
+                            <input id="answer-filling-blank-model" name="answer" class="form-control"
+                                   type="text" placeholder="请输入正确答案" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 分值 </span>
+                            <input id="score-filling-blank-model" name="score" class="form-control"
+                                   type="number" placeholder="请输入此题分值" required="required"/>
+                        </div>
+                        <button id="btn-filling-blank-model" class="btn btn-sm btn-primary btn-block post-margin"
+                                type="submit"> 添加
+                        </button>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <div class="modal fade" id="essay-model" tabindex="-1" role="dialog" aria-labelledby="essay" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 id="title-essay-model" class="modal-title">
+                        添加简答题
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <form id="form-essay-model" th:action="@{/essays}" method="post">
+                        <input name="paperId" th:value="${paperVO.paper.id}" type="hidden" required="required"/>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 问题 </span>
+                            <input id="question-essay-model" name="question" class="form-control"
+                                   type="text" placeholder="请输入题目" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 正确答案 </span>
+                            <textarea id="answer-essay-model" name="answer" class="form-control"
+                                      type="text" placeholder="请输入正确答案(255字以内)" required="required"/>
+                        </div>
+                        <div class="input-group post-margin">
+                            <span class="input-group-addon"> 分值 </span>
+                            <input id="score-essay-model" name="score" class="form-control" type="number"
+                                   placeholder="请输入此题分值" required="required"/>
+                        </div>
+                        <button id="btn-essay-model" class="btn btn-sm btn-primary btn-block post-margin" type="submit">
+                            添加
+                        </button>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+
+    <div class="modal fade" id="alert-modal" tabindex="-1" role="dialog" aria-labelledby="alert-modal"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title">提示</h4>
+                </div>
+                <div id="body-alert-modal" class="modal-body">
+                    <h5>是否确认交卷</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">
+                        关闭
+                    </button>
+                    <button id="accomplish" type="button" class="btn btn-sm btn-primary"
+                            th:onclick="'javascript:accomplish(\''+${paperVO.singleSelDOs.size()}+'\',\''+
+                    ${paperVO.multiSelDOs.size()}+'\',\''+${paperVO.rightWrongDOs.size()}+'\',\''+
+                    ${paperVO.fillingBlankDOs.size()}+'\',\''+${paperVO.essayDOs.size()} +'\',\''+
+                    ${paperVO.paper.id} + '\')'">
+                        提交
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+</div>
+
+<div class="container">
+    <hr/>
+    <footer>
+        <p class="pull-right"><a href="#"> 返回顶部 </a></p>
+        <p>&copy; 2017 Powered By Chong</p>
+    </footer>
+</div>
+</body>
+<script th:src="@{/js/jquery/jquery-3.2.0.js}"></script>
+<script th:src="@{/js/bootstrap/bootstrap.js}"></script>
+<script th:src="@{/js/jquery/jQuery.print.js}"></script>
+<script th:src="@{/js/mobileclass/paper-detail.js}"></script>
+</html>

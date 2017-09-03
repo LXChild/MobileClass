@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset=" UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>移动课堂</title>
+
+    <link th:href="@{/css/bootstrap/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/css/mobileclass/answer.css}" rel="stylesheet"/>
+    <link th:href="@{/fonts/font-awesome.css}" rel="stylesheet"/>
+</head>
+<body>
+<!-- Fixed navbar -->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#"> 移动课堂 </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a th:href="@{/index}"> 主页 </a></li>
+                <li><a th:href="@{/courses}"> 课程 </a></li>
+                <li class="active"><a th:href="@{/papers}"> 试题 </a></li>
+                <li><a th:href="@{/posts}"> 论坛 </a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                       aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-user"
+                              th:text="${#httpServletRequest.getRemoteUser()}"> 我的 </span>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a th:href="@{/users/profile}"> 个人资料 </a></li>
+                        <li><a th:href="@{/courses/mine}"> 课程相关 </a></li>
+                        <li sec:authorize="hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_ADMIN')">
+                            <a th:href="@{/users}"> 用户管理 </a>
+                        </li>
+                        <li sec:authorize="hasRole('ROLE_SYS_ADMIN')">
+                            <a th:href="@{/roles}"> 角色管理 </a>
+                        </li>
+                        <li><a th:href="@{/aboutus}"> 关于我们 </a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a th:href="@{/logout}"> 注销 </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+<div class="container content">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4> 答案详情 </h4>
+        </div>
+        <div class="panel-body">
+            <ul th:if="${singleSel != null}" class="list-unstyled top_profiles">
+                <li class="media event">
+                    <div class="media-body body-question-margin" th:object="${singleSel}">
+                        <h5 th:text="*{question}"> 问题 </h5>
+                        <div class="radio-group">
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="singleSel" th:text="*{answerA}" value="A"/>
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="singleSel" th:text="*{answerB}" value="B"/>
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="singleSel" th:text="*{answerC}" value="C"/>
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="singleSel" th:text="*{answerD}" value="D"/>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label> 正确答案： </label>
+                            <small th:text="*{answerR}"> 正确答案</small>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <ul th:if="${multiSel != null}" class="list-unstyled top_profiles">
+                <li class="media event">
+                    <div class="media-body body-question-margin" th:object="${multiSel}">
+                        <h5 th:text="*{question}"> 问题 </h5>
+                        <div class="checkbox-group">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="multiSel" th:text="*{answerA}" value="A"/>
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="multiSel"  th:text="*{answerB}" value="B"/>
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="multiSel" th:text="*{answerC}" value="C"/>
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="multiSel" th:text="*{answerD}" value="D"/>
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="multiSel" th:text="*{answerE}" value="E"/>
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="multiSel" th:text="*{answerF}" value="F"/>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label> 正确答案： </label>
+                            <small th:text="*{answerR}"> 正确答案</small>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <ul th:if="${rightWrong != null}" class="list-unstyled top_profiles">
+                <li class="media event">
+                    <div class="media-body body-question-margin" th:object="${rightWrong}">
+                        <h5 th:text="*{question}"> 问题 </h5>
+                        <div>
+                            <label> 正确答案： </label>
+                            <small th:if="*{answer}"> 正确</small>
+                            <small th:if="not *{answer}"> 错误</small>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <ul th:if="${fillingBlank != null}" class="list-unstyled top_profiles">
+                <li class="media event body-question-margin">
+                    <div class="media-body body-question-margin" th:object="${fillingBlank}">
+                        <h5 th:text="*{question}"> 问题 </h5>
+                        <div>
+                            <label> 正确答案： </label>
+                            <small th:text="*{answer}"> 正确答案</small>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <ul th:if="${essay != null}" class="list-unstyled top_profiles">
+                <li class="media event">
+                    <div class="media-body body-question-margin" th:object="${essay}">
+                        <h5 th:text="*{question}"> 问题 </h5>
+                        <div>
+                            <label> 正确答案： </label>
+                            <small th:text="*{answer}"> 正确答案</small>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <hr/>
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th> 学生名</th>
+                    <th> 真实姓名</th>
+                    <th> 答案</th>
+                    <th> 交卷时间</th>
+                    <th> 得分</th>
+                </tr>
+                </thead>
+                <tbody th:each="answerInfoVO : ${answerInfoVOs}">
+                <tr>
+                    <td th:text="${answerInfoVO.user.name}"></td>
+                    <td th:text="${answerInfoVO.user.realName}"></td>
+                    <td th:text="${answerInfoVO.answerInfo.answer}"></td>
+                    <td th:text="${answerInfoVO.answerInfo.createTime}"></td>
+                    <td th:text="${answerInfoVO.answerInfo.score}"> lie</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <hr/>
+    <footer>
+        <p class="pull-right"><a href="#"> 返回顶部 </a></p>
+        <p>&copy; 2017 Powered By Chong</p>
+    </footer>
+</div>
+</body>
+<script th:src="@{/js/jquery/jquery-3.2.0.js}"></script>
+<script th:src="@{/js/bootstrap/bootstrap.js}"></script>
+</html>

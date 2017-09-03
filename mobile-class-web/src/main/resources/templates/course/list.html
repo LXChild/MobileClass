@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title> 移动课堂 </title>
+
+    <link th:href="@{/css/bootstrap/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/fonts/font-awesome.css}" rel="stylesheet"/>
+    <link th:href="@{/css/mobileclass/course-list.css}" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                        aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#"> 移动课堂 </a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a th:href="@{/index}"> 主页 </a></li>
+                    <li class="active"><a th:href="@{/courses}"> 课程 </a></li>
+                    <li><a th:href="@{/papers}"> 试题 </a></li>
+                    <li><a th:href="@{/posts}"> 论坛 </a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                           aria-haspopup="true" aria-expanded="false">
+                            <span class="glyphicon glyphicon-user" th:text="${#httpServletRequest.getRemoteUser()}"> 我的 </span>
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a th:href="@{/users/profile}"> 个人资料 </a></li>
+                            <li><a th:href="@{/courses/mine}"> 课程相关 </a></li>
+                            <li sec:authorize="hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_ADMIN')">
+                                <a th:href="@{/users}"> 用户管理 </a>
+                            </li>
+                            <li sec:authorize="hasRole('ROLE_SYS_ADMIN')">
+                                <a th:href="@{/roles}"> 角色管理 </a>
+                            </li>
+                            <li><a th:href="@{/aboutus}"> 关于我们 </a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a th:href="@{/logout}"> 注销 </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div><!--/.nav-collapse -->
+        </div>
+    </nav>
+</div>
+<!--页面内容-->
+<div class="container">
+    <div class="panel panel-default panel-margin">
+        <div class="panel-heading">
+            <h4> 查询条件 </h4>
+        </div>
+        <div class="panel-body">
+            <div class="input-group">
+                <input id="input-search" th:value="${searchText}" type="text" placeholder="课程名称" class="form-control"/>
+                <span class="input-group-btn">
+                        <a id="btn-search" class="btn btn-primary" type="button" onclick="searchByName()">
+                            <i class="fa fa-search">查询</i>
+                        </a>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4> 课程列表 </h4>
+        </div>
+        <div class="panel-body">
+            <ul class="list-unstyled top_profiles scroll-view" th:each="course : ${courses}">
+                <li class="media event">
+                    <a class="pull-left border-aero profile_thumb">
+                        <i class="fa fa-user aero"></i>
+                    </a>
+                    <div class="media-body">
+                        <a class="title" th:href="@{'/courses/' + ${course.id}}" th:text="${course.name}"> 课程名 </a>
+                        <p th:text="${course.introduction}"> 简介 </p>
+                        <p>
+                            <small th:text="${#calendars.format(course.updateTime,'yyyy-MM-dd HH:mm:ss')}"> 创建时间 </small>
+                        </p>
+                    </div>
+                </li>
+            </ul>
+            <nav>
+                <ul class="pagination">
+                    <li class="disabled"><a>&laquo;</a></li>
+
+                    <li th:if="${not isFirstPage}">
+                        <a th:if="${not isFirstPage}"
+                           th:href="@{${'/courses'}(pageNum=${pageNum-1},pageSize=${pageSize})}"> 上一页 </a>
+                    </li>
+                    <li th:if="${isFirstPage}" class="disabled">
+                        <a th:if="${isFirstPage}" disabled="true"> 上一页 </a>
+                    </li>
+
+                    <li th:each="pageNo : ${#numbers.sequence(1, totalPages)}">
+                    <li th:if="${pageNum eq pageNo}" class="active">
+                        <a th:if="${pageNum eq pageNo}" href="javascript:void(0);">
+                            <span th:text="${pageNo}"></span>
+                        </a>
+                    </li>
+                    <a th:if="${not (pageNum eq pageNo)}"
+                       th:href="@{${'/courses'}(pageNum=${pageNo},size=${pageSize})}">
+                        <span th:text="${pageNo}"></span>
+                    </a>
+                    </li>
+
+                    <li>
+                        <a th:if="${not isLastPage}"
+                           th:href="@{${'/courses'}(pageNum=${pageNum + 1},size=${pageSize})}">
+                            下一页
+                        </a>
+                    </li>
+                    <li th:if="${isLastPage}" class="disabled">
+                        <a th:if="${isLastPage}" disabled="true"> 下一页 </a>
+                    </li>
+
+                    <li class="disabled"><a>&raquo;</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    <div sec:authorize="hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_ADMIN', 'ROLE_TEACHER')" class="panel panel-default">
+        <div class="panel-heading">
+            <h4> 发表新课 </h4>
+        </div>
+        <div class="panel-body">
+            <form th:action="@{/courses}" method="post">
+                <input name="name" class="form-control" type="text" placeholder="请输入课程名称" required="required"/>
+                <textarea name="introduction" class="form-control post-content margin-top-13" type="text" placeholder="请输入简介"
+                          required="required"/>
+                <button class="btn btn-sm btn-primary btn-block margin-top-13" type="submit"> 发布 </button>
+            </form>
+        </div>
+    </div>
+</div><!--/.container-->
+<div class="container">
+    <hr/>
+    <footer>
+        <p class="pull-right"><a href="#"> 返回顶部 </a></p>
+        <p>&copy; 2017 Powered By Chong</p>
+    </footer>
+</div>
+</body>
+<script th:src="@{/js/jquery/jquery-3.2.0.js}"></script>
+<script th:src="@{/js/bootstrap/bootstrap.js}"></script>
+<script th:src="@{/js/mobileclass/course-list.js}"></script>
+</html>

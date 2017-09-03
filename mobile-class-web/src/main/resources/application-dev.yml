@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mine_db?characterEncoding=utf8&useSSL=true
+    username: root
+    password: 1092982300
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates
+
+  http:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+course:
+  courseware:
+    file-path: /Users/LXChild/Documents
+    request-path: http://192.168.1.100:8080/files/download?fileName=
+
+logging:
+  file: ./mobileclass.log
+  level:
+    root: error
+    org.springframework.web: info

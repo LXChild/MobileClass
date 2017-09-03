@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title> 移动课堂 </title>
+
+    <link th:href="@{/css/bootstrap/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/css/bootstrap/bootstrap-table.css}" rel="stylesheet"/>
+    <link th:href="@{/css/mobileclass/profile.css}" rel="stylesheet"/>
+    <link th:href="@{/fonts/font-awesome.css}" rel="stylesheet"/>
+</head>
+<body>
+<!-- Fixed navbar -->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#"> 移动课堂 </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a th:href="@{/index}"> 主页 </a></li>
+                <li><a th:href="@{/courses}"> 课程 </a></li>
+                <li><a th:href="@{/papers}"> 试题 </a></li>
+                <li><a th:href="@{/posts}"> 论坛 </a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                       aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-user"
+                              th:text="${#httpServletRequest.getRemoteUser()}"> 我的 </span>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="active"><a href="#"> 个人资料 </a></li>
+                        <li><a th:href="@{/courses/mine}"> 课程相关 </a></li>
+                        <li sec:authorize="hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_ADMIN')">
+                            <a th:href="@{/users}"> 用户管理 </a>
+                        </li>
+                        <li sec:authorize="hasRole('ROLE_SYS_ADMIN')">
+                            <a th:href="@{/roles}"> 角色管理 </a>
+                        </li>
+                        <li><a th:href="@{/aboutus}"> 关于我们 </a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a th:href="@{/logout}"> 注销 </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+<div class="container content">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4> 个人资料 </h4>
+        </div>
+        <div class="panel-body width-50 center-block" th:object="${user}">
+            <div class="input-group">
+                <span class="input-group-addon"> 用户名 </span>
+                <input id="input-name" name="name" class="form-control" type="text"
+                       th:value="*{name}" readonly="readonly" required="required"/>
+            </div>
+            <div class="input-group margin-13">
+                <span class="input-group-addon"> 真实姓名 </span>
+                <input id="input-real-name" name="realName" class="form-control" type="text"
+                       th:value="*{realName}" readonly="readonly" required="required"/>
+            </div>
+            <div class="input-group margin-13">
+                <span class="input-group-addon"> 手机号 </span>
+                <input id="input-mobile" name="mobile" class="form-control" type="text"
+                       th:value="*{mobile}" readonly="readonly" required="required"/>
+            </div>
+            <div class="input-group margin-13">
+                <span class="input-group-addon"> 邮箱 </span>
+                <input id="input-email" name="email" class="form-control" type="text"
+                       th:value="*{email}" readonly="readonly" required="required"/>
+            </div>
+        </div>
+    </div>
+</div><!--/.container-->
+<div class="container">
+    <hr/>
+    <footer>
+        <p class="pull-right"><a href="#"> 返回顶部 </a></p>
+        <p>&copy; 2017 Powered By Chong</p>
+    </footer>
+</div>
+</body>
+<script th:src="@{/js/jquery/jquery-3.2.0.js}"></script>
+<script th:src="@{/js/bootstrap/bootstrap.js}"></script>
+<script th:src="@{/js/bootstrap/bootstrap-table.js}"></script>
+<script th:src="@{/js/bootstrap/bootstrap-table-zh-CN.js}"></script>
+</html>
